@@ -681,14 +681,17 @@
         let dbConnected = false;
         
         // Try to initialize Supabase if credentials are provided
-        if (SUPABASE_URL !== 'https://tppfkdkgavkmexffrfgz.supabase.co' && SUPABASE_ANON_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwcGZrZGtnYXZrbWV4ZmZyZmd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzMDA5MjksImV4cCI6MjA2OTg3NjkyOX0.aCHLoshuryFUTES2L_hSTPAsqpY5Kbc7-6Qm8qCNBEA') {
-            try {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                dbConnected = true;
-            } catch (error) {
-                console.log('Supabase initialization failed:', error);
-            }
-        }
+       // Try to initialize Supabase if credentials are provided
+if (SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL.startsWith('https://')) {
+    try {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        dbConnected = true;
+        console.log('Supabase initialized successfully');
+    } catch (error) {
+        console.log('Supabase initialization failed:', error);
+        dbConnected = false;
+    }
+}
 
         let projectCounter = 0;
         let taskCounter = 0;
