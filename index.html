@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Project Task Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            padding: 10px;
+            color: #495057;
+        }
+
+        .app-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e9ecef;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 2px solid #8b7765;
+            color: #495057;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            font-weight: 600;
+            color: #8b7765;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-info {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .week-info {
+            background: #f8f9fa;
+            border: 1px solid #8b7765;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            color: #6c757d;
+        }
+
+        .db-status {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .db-status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .db-status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .main-content {
+            padding: 30px;
+            background: #fafbfc;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .project-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
+        }
+
+        .project-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .project-header {
+            background: #8b7765;
+            color: white;
+            padding: 20px;
+            position: relative;
+        }
+
+        .project-title {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.3em;
+            font-weight: 600;
+            width: 100%;
+            outline: none;
+            margin-bottom: 10px;
+        }
+
+        .project-title::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .project-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
+
+        .project-body {
+            padding: 20px;
+            background: white;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #28a745;
+            transition: width 0.3s ease;
+        }
+
+        /* Task Hierarchy Styles */
+        .task-item {
+            background: white;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            border: 1px solid #e9ecef;
+            border-left: 3px solid #dee2e6;
+        }
+
+        .task-item.level-1 { 
+            margin-left: 0px; 
+            border-left-color: #8b7765;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        .task-item.level-2 { 
+            margin-left: 25px; 
+            border-left-color: #a68b73;
+            background: #fafbfc;
+        }
+        .task-item.level-3 { 
+            margin-left: 50px; 
+            border-left-color: #c4b29a;
+            background: #f8f9fa;
+        }
+
+        .task-item.easy {
+            border-left-color: #28a745 !important;
+        }
+        .task-item.complex {
+            border-left-color: #dc3545 !important;
+        }
+
+        .task-item:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .task-number {
+            background: #8b7765;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .task-input {
+            flex-grow: 1;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            font-weight: 500;
+            outline: none;
+            padding: 6px 8px;
+            color: #495057;
+            min-width: 200px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .task-input:focus {
+            background: #f8f9fa;
+        }
+
+        .task-input::placeholder {
+            color: #adb5bd;
+        }
+
+        .task-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .status-selector, .complexity-selector {
+            padding: 4px 10px;
+            border: 1px solid #ced4da;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            background: white;
+            color: #495057;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-selector.not-started { 
+            background: #f8f9fa; 
+            color: #6c757d; 
+            border-color: #ced4da;
+        }
+        .status-selector.pending { 
+            background: #fff3cd; 
+            color: #856404; 
+            border-color: #ffeaa7;
+        }
+        .status-selector.in-progress { 
+            background: #cce5ff; 
+            color: #004085; 
+            border-color: #66b3ff;
+        }
+        .status-selector.done { 
+            background: #d4edda; 
+            color: #155724; 
+            border-color: #28a745;
+        }
+        .status-selector.blocked { 
+            background: #f8d7da; 
+            color: #721c24; 
+            border-color: #dc3545;
+        }
+
+        .complexity-selector.easy {
+            background: #d4edda;
+            color: #155724;
+            border-color: #28a745;
+        }
+
+        .complexity-selector.complex {
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #dc3545;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 6px;
+            margin-left: auto;
+        }
+
+        .action-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .expand-btn { background: #6c757d; }
+        .add-subtask-btn { background: #28a745; }
+        .image-btn { background: #17a2b8; }
+        .delete-btn { background: #dc3545; }
+
+        .action-btn:hover {
+            transform: scale(1.1);
+            opacity: 0.9;
+        }
+
+        /* Task Details Section */
+        .task-details {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+            display: none;
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px -15px -15px -15px;
+        }
+
+        .task-details.expanded {
+            display: block;
+        }
+
+        .task-section {
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .notes-area {
+            width: 100%;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 14px;
+            outline: none;
+            background: white;
+            color: #495057;
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .notes-area:focus {
+            border-color: #8b7765;
+            box-shadow: 0 0 0 2px rgba(139, 119, 101, 0.25);
+        }
+
+        .notes-area::placeholder {
+            color: #adb5bd;
+        }
+
+        /* Image Upload Section */
+        .image-section {
+            margin-bottom: 15px;
+        }
+
+        .image-upload {
+            display: none;
+        }
+
+        .image-upload-btn {
+            background: #8b7765;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .image-upload-btn:hover {
+            background: #6d5d52;
+        }
+
+        .image-preview {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .image-item {
+            position: relative;
+            max-width: 150px;
+        }
+
+        .image-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-delete {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Control Buttons */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            font-size: 14px;
+        }
+
+        .add-project-btn { background: #8b7765; }
+        .export-btn { background: #6c757d; }
+        .save-btn { background: #28a745; }
+        .load-btn { background: #007bff; }
+
+        .control-btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
+        }
+
+        /* Add Task Button */
+        .add-main-task-btn {
+            background: white;
+            border: 2px dashed #8b7765;
+            color: #8b7765;
+            padding: 15px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .add-main-task-btn:hover {
+            background: #f8f9fa;
+            border-color: #6d5d52;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                padding: 15px 20px;
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .header h1 {
+                font-size: 1.5em;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+
+            .task-item.level-2 { margin-left: 15px; }
+            .task-item.level-3 { margin-left: 30px; }
+            
+            .task-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            
+            .task-controls {
+                justify-content: space-between;
+            }
+        }
+
+        /* Animations */
+        .task-item {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #28a745;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            z-index: 1001;
+            opacity: 0;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .notification.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .notification.info {
+            background: #17a2b8;
+        }
+
+        /* Database Setup Instructions */
+        .setup-banner {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border: 1px solid #2196f3;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 25px;
+            color: #1565c0;
+        }
+
+        .setup-banner h3 {
+            margin-bottom: 10px;
+            color: #0d47a1;
+        }
+
+        .setup-banner code {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .setup-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .setup-step {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 3px solid #2196f3;
+        }
+
+        .setup-step h4 {
+            margin-bottom: 8px;
+            color: #0d47a1;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1>📋 Project Task Manager</h1>
+            <div class="header-info">
+                <div class="week-info">
+                    <strong>This Week:</strong> <span id="weekDates"></span>
+                </div>
+                <div class="db-status disconnected" id="dbStatus">
+                    💾 Database: Setting up...
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Database Setup Instructions -->
+            <div class="setup-banner" id="setupBanner">
+                <h3>🚀 Ready to Deploy with Real Database!</h3>
+                <p>Your app is ready to connect to Supabase. Here's how to get it running:</p>
+                
+                <div class="setup-steps">
+                    <div class="setup-step">
+                        <h4>1. Create Supabase Project</h4>
+                        <p>• Go to <code>supabase.com</code><br>
+                        • Create free account<br>
+                        • Create new project</p>
+                    </div>
+                    <div class="setup-step">
+                        <h4>2. Get Your Keys</h4>
+                        <p>• Project Settings → API<br>
+                        • Copy <code>URL</code> and <code>anon key</code><br>
+                        • Update config below</p>
+                    </div>
+                    <div class="setup-step">
+                        <h4>3. Deploy to Netlify</h4>
+                        <p>• Save this HTML file<br>
+                        • Drag to <code>netlify.com</code><br>
+                        • Your app is live!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="projects-grid" id="projectsGrid">
+                <!-- Projects will be added here -->
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn add-project-btn" onclick="addProject()">➕ Add Project</button>
+            <button class="control-btn save-btn" onclick="saveToDatabase()">💾 Save to Database</button>
+            <button class="control-btn load-btn" onclick="loadFromDatabase()">📂 Load Data</button>
+            <button class="control-btn export-btn" onclick="exportData()">📋 Export Report</button>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // 🔧 SUPABASE CONFIGURATION
+        // Replace these with your actual Supabase credentials
+        const SUPABASE_URL = 'https://tppfkdkgavkmexffrfgz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwcGZrZGtnYXZrbWV4ZmZyZmd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzMDA5MjksImV4cCI6MjA2OTg3NjkyOX0.aCHLoshuryFUTES2L_hSTPAsqpY5Kbc7-6Qm8qCNBEA';
+        
+        // Initialize Supabase client
+        let supabase = null;
+        let dbConnected = false;
+        
+        // Try to initialize Supabase if credentials are provided
+        if (SUPABASE_URL !== 'https://tppfkdkgavkmexffrfgz.supabase.co' && SUPABASE_ANON_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwcGZrZGtnYXZrbWV4ZmZyZmd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzMDA5MjksImV4cCI6MjA2OTg3NjkyOX0.aCHLoshuryFUTES2L_hSTPAsqpY5Kbc7-6Qm8qCNBEA') {
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                dbConnected = true;
+            } catch (error) {
+                console.log('Supabase initialization failed:', error);
+            }
+        }
+
+        let projectCounter = 0;
+        let taskCounter = 0;
+        let allProjects = [];
+
+        // Initialize
+        function init() {
+            setWeekDates();
+            updateDBStatus();
+            loadSampleData();
+            
+            // Auto-hide setup banner after 10 seconds if database is connected
+            if (dbConnected) {
+                setTimeout(() => {
+                    const banner = document.getElementById('setupBanner');
+                    if (banner) banner.style.display = 'none';
+                }, 10000);
+            }
+        }
+
+        function setWeekDates() {
+            const now = new Date();
+            const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+            const endOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + 6));
+            
+            const options = { month: 'short', day: 'numeric' };
+            const weekText = `${startOfWeek.toLocaleDateString('en-US', options)} - ${endOfWeek.toLocaleDateString('en-US', options)}`;
+            document.getElementById('weekDates').textContent = weekText;
+        }
+
+        function updateDBStatus() {
+            const status = document.getElementById('dbStatus');
+            
+            if (dbConnected && supabase) {
+                status.className = 'db-status connected';
+                status.textContent = '💾 Database: Connected';
+                
+                // Hide setup banner
+                const banner = document.getElementById('setupBanner');
+                if (banner) banner.style.display = 'none';
+                
+                showNotification('Database connected successfully!');
+            } else {
+                status.className = 'db-status disconnected';
+                status.textContent = '💾 Setup Required';
+            }
+        }
+
+        function loadSampleData() {
+            const sampleProjects = [
+                {
+                    title: 'EHR TB MODULE',
+                    tasks: [
+                        {
+                            number: '1.1',
+                            text: 'REGISTER - PATIENT MUST GO TO THE REGISTRATION PAGE',
+                            level: 1,
+                            complexity: 'complex',
+                            status: 'in-progress',
+                            notes: 'Need to add screenshot showing the registration screen layout',
+                            subtasks: [
+                                {
+                                    number: '1.1.1',
+                                    text: 'Design registration form layout',
+                                    level: 2,
+                                    complexity: 'easy',
+                                    status: 'done',
+                                    notes: 'Completed wireframe mockup'
+                                },
+                                {
+                                    number: '1.1.2',
+                                    text: 'Implement form validation',
+                                    level: 2,
+                                    complexity: 'complex',
+                                    status: 'pending',
+                                    notes: 'Need to validate patient ID format'
+                                }
+                            ]
+                        },
+                        {
+                            number: '1.2',
+                            text: 'UNDER REGISTRATION THERE ARE 2 COLUMNS',
+                            level: 1,
+                            complexity: 'easy',
+                            status: 'not-started',
+                            notes: 'Two main sections needed for data entry'
+                        },
+                        {
+                            number: '1.3',
+                            text: 'PATIENT DEMOGRAPHICS AND DISEASE CLASSIFICATION',
+                            level: 1,
+                            complexity: 'complex',
+                            status: 'not-started',
+                            notes: 'Need to integrate with existing patient database',
+                            subtasks: [
+                                {
+                                    number: '1.3.1',
+                                    text: 'Patient Demographics Form',
+                                    level: 2,
+                                    complexity: 'easy',
+                                    status: 'not-started',
+                                    notes: 'Basic info: name, age, address, contact'
+                                },
+                                {
+                                    number: '1.3.2',
+                                    text: 'Disease Classification System',
+                                    level: 2,
+                                    complexity: 'complex',
+                                    status: 'not-started',
+                                    notes: 'TB classification based on WHO guidelines'
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    title: 'AWS MACHINE LEARNING',
+                    tasks: []
+                },
+                {
+                    title: 'CREATE MY FIRST VIDEO FOR YOUTUBE',
+                    tasks: []
+                },
+                {
+                    title: 'WRITE A LINKEDIN POST',
+                    tasks: []
+                }
+            ];
+
+            sampleProjects.forEach(project => {
+                addProject(project.title);
+                if (project.tasks.length > 0) {
+                    const projectId = projectCounter;
+                    project.tasks.forEach(task => {
+                        addTask(projectId, task, 1);
+                        if (task.subtasks) {
+                            task.subtasks.forEach(subtask => {
+                                addTask(projectId, subtask, 2);
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        function addProject(title = '') {
+            projectCounter++;
+            const projectsGrid = document.getElementById('projectsGrid');
+            
+            const projectCard = document.createElement('div');
+            projectCard.className = 'project-card';
+            projectCard.id = `project-${projectCounter}`;
+            
+            projectCard.innerHTML = `
+                <div class="project-header">
+                    <input type="text" class="project-title" placeholder="Enter project name..." value="${title}" onchange="autoSave()">
+                    <div class="project-stats">
+                        <span id="stats-${projectCounter}">0 tasks • 0% complete</span>
+                        <span id="progress-${projectCounter}">Not Started</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressBar-${projectCounter}" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="project-body">
+                    <div class="task-list" id="taskList-${projectCounter}">
+                        <!-- Tasks will be added here -->
+                    </div>
+                    <button class="add-main-task-btn" onclick="addMainTask(${projectCounter})">➕ Add Main Task</button>
+                </div>
+            `;
+            
+            projectsGrid.appendChild(projectCard);
+            updateProjectStats(projectCounter);
+            autoSave();
+        }
+
+        function addMainTask(projectId) {
+            const taskCount = document.querySelectorAll(`#taskList-${projectId} .task-item.level-1`).length + 1;
+            const taskNumber = `${taskCount}`;
+            
+            const taskData = {
+                number: taskNumber,
+                text: '',
+                level: 1,
+                complexity: 'easy',
+                status: 'not-started',
+                notes: ''
+            };
+            
+            addTask(projectId, taskData, 1);
+        }
+
+        function addTask(projectId, taskData = null, level = 1) {
+            taskCounter++;
+            const taskList = document.getElementById(`taskList-${projectId}`);
+            
+            if (!taskData) {
+                const mainTasks = document.querySelectorAll(`#taskList-${projectId} .task-item.level-1`).length;
+                const parentTask = event ? event.target.closest('.task-item') : null;
+                let taskNumber = '';
+                
+                if (level === 1) {
+                    taskNumber = `${mainTasks + 1}`;
+                } else if (parentTask) {
+                    const parentNumber = parentTask.querySelector('.task-number').textContent;
+                    const siblings = parentTask.parentElement.querySelectorAll(`.task-item.level-${level}`);
+                    taskNumber = `${parentNumber}.${siblings.length + 1}`;
+                }
+                
+                taskData = {
+                    number: taskNumber,
+                    text: '',
+                    level: level,
+                    complexity: 'easy',
+                    status: 'not-started',
+                    notes: ''
+                };
+            }
+            
+            const taskItem = document.createElement('div');
+            taskItem.className = `task-item level-${taskData.level} ${taskData.complexity}`;
+            taskItem.id = `task-${taskCounter}`;
+            taskItem.dataset.level = taskData.level;
+            
+            taskItem.innerHTML = `
+                <div class="task-header">
+                    <div class="task-number">${taskData.number}</div>
+                    <input type="text" class="task-input" placeholder="Enter task description..." value="${taskData.text}" onchange="autoSave()">
+                    <div class="task-controls">
+                        <select class="status-selector ${taskData.status}" onchange="changeTaskStatus(this)">
+                            <option value="not-started" ${taskData.status === 'not-started' ? 'selected' : ''}>Not Started</option>
+                            <option value="pending" ${taskData.status === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="in-progress" ${taskData.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
+                            <option value="done" ${taskData.status === 'done' ? 'selected' : ''}>Done</option>
+                            <option value="blocked" ${taskData.status === 'blocked' ? 'selected' : ''}>Blocked</option>
+                        </select>
+                        <select class="complexity-selector ${taskData.complexity}" onchange="changeTaskComplexity(this)">
+                            <option value="easy" ${taskData.complexity === 'easy' ? 'selected' : ''}>📗 Easy</option>
+                            <option value="complex" ${taskData.complexity === 'complex' ? 'selected' : ''}>📕 Complex</option>
+                        </select>
+                    </div>
+                    <div class="task-actions">
+                        <button class="action-btn expand-btn" onclick="toggleTaskDetails(${taskCounter})" title="Details">📝</button>
+                        ${taskData.level < 3 ? `<button class="action-btn add-subtask-btn" onclick="addSubTask(${projectId}, ${taskCounter})" title="Add Subtask">➕</button>` : ''}
+                        <button class="action-btn image-btn" onclick="toggleImageUpload(${taskCounter})" title="Add Image">📷</button>
+                        <button class="action-btn delete-btn" onclick="deleteTask(${taskCounter})" title="Delete">🗑️</button>
+                    </div>
+                </div>
+                
+                <div class="task-details" id="details-${taskCounter}">
+                    <div class="task-section">
+                        <div class="section-title">📝 Notes & Progress</div>
+                        <textarea class="notes-area" placeholder="Add your notes, progress updates, or any additional details here..." onchange="autoSave()">${taskData.notes}</textarea>
+                    </div>
+                    
+                    <div class="image-section">
+                        <div class="section-title">📷 Screenshots & Images</div>
+                        <input type="file" class="image-upload" id="imageUpload-${taskCounter}" accept="image/*" multiple onchange="handleImageUpload(${taskCounter}, this)">
+                        <button class="image-upload-btn" onclick="document.getElementById('imageUpload-${taskCounter}').click()">📷 Add Screenshot/Image</button>
+                        <div class="image-preview" id="imagePreview-${taskCounter}">
+                            <!-- Images will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            taskList.appendChild(taskItem);
+            updateProjectStats(projectId);
+            autoSave();
+        }
+
+        function addSubTask(projectId, parentTaskId) {
+            const parentTask = document.getElementById(`task-${parentTaskId}`);
+            const parentNumber = parentTask.querySelector('.task-number').textContent;
+            const parentLevel = parseInt(parentTask.dataset.level);
+            const newLevel = parentLevel + 1;
+            
+            if (newLevel > 3) {
+                showNotification('Maximum nesting level reached (3 levels)', 'warning');
+                return;
+            }
+            
+            // Count existing subtasks
+            const siblings = document.querySelectorAll(`[id^="task-"]`);
+            let subtaskCount = 0;
+            
+            siblings.forEach(sibling => {
+                const siblingNumber = sibling.querySelector('.task-number').textContent;
+                if (siblingNumber.startsWith(parentNumber + '.')) {
+                    subtaskCount++;
+                }
+            });
+            
+            const taskNumber = `${parentNumber}.${subtaskCount + 1}`;
+            
+            const taskData = {
+                number: taskNumber,
+                text: '',
+                level: newLevel,
+                complexity: 'easy',
+                status: 'not-started',
+                notes: ''
+            };
+            
+            addTask(projectId, taskData, newLevel);
+        }
+
+        function changeTaskStatus(select) {
+            const taskItem = select.closest('.task-item');
+            select.className = `status-selector ${select.value}`;
+            
+            const projectCard = taskItem.closest('.project-card');
+            const projectId = projectCard.id.split('-')[1];
+            updateProjectStats(projectId);
+            autoSave();
+        }
+
+        function changeTaskComplexity(select) {
+            const taskItem = select.closest('.task-item');
+            taskItem.className = taskItem.className.replace(/(easy|complex)/, select.value);
+            select.className = `complexity-selector ${select.value}`;
+            autoSave();
+        }
+
+        function toggleTaskDetails(taskId) {
+            const details = document.getElementById(`details-${taskId}`);
+            details.classList.toggle('expanded');
+            
+            const btn = event.target;
+            btn.textContent = details.classList.contains('expanded') ? '📋' : '📝';
+        }
+
+        function toggleImageUpload(taskId) {
+            const imageSection = document.querySelector(`#details-${taskId} .image-section`);
+            const details = document.getElementById(`details-${taskId}`);
+            
+            if (!details.classList.contains('expanded')) {
+                details.classList.add('expanded');
+                const btn = details.parentElement.querySelector('.expand-btn');
+                btn.textContent = '📋';
+            }
+            
+            // Scroll to image section
+            imageSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function handleImageUpload(taskId, input) {
+            const files = input.files;
+            const preview = document.getElementById(`imagePreview-${taskId}`);
+            
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const imageItem = document.createElement('div');
+                        imageItem.className = 'image-item';
+                        imageItem.innerHTML = `
+                            <img src="${e.target.result}" alt="Task screenshot">
+                            <button class="image-delete" onclick="this.parentElement.remove(); autoSave()">×</button>
+                        `;
+                        preview.appendChild(imageItem);
+                        autoSave();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Clear the input
+            input.value = '';
+        }
+
+        function deleteTask(taskId) {
+            if (confirm('Are you sure you want to delete this task and all its subtasks?')) {
+                const task = document.getElementById(`task-${taskId}`);
+                const taskNumber = task.querySelector('.task-number').textContent;
+                const projectCard = task.closest('.project-card');
+                const projectId = projectCard.id.split('-')[1];
+                
+                // Remove the task
+                task.remove();
+                
+                // Remove all subtasks
+                const allTasks = document.querySelectorAll(`#taskList-${projectId} .task-item`);
+                allTasks.forEach(t => {
+                    const tNumber = t.querySelector('.task-number').textContent;
+                    if (tNumber.startsWith(taskNumber + '.')) {
+                        t.remove();
+                    }
+                });
+                
+                updateProjectStats(projectId);
+                autoSave();
+                showNotification('Task deleted successfully');
+            }
+        }
+
+        function updateProjectStats(projectId) {
+            const project = document.getElementById(`project-${projectId}`);
+            const tasks = project.querySelectorAll('.task-item');
+            const completed = project.querySelectorAll('.status-selector[value="done"]');
+            const inProgress = project.querySelectorAll('.status-selector[value="in-progress"]');
+            
+            const totalTasks = tasks.length;
+            const completedTasks = completed.length;
+            const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            
+            // Update stats text
+            const stats = document.getElementById(`stats-${projectId}`);
+            stats.textContent = `${totalTasks} tasks • ${completionPercentage}% complete`;
+            
+            // Update progress status
+            const progressText = document.getElementById(`progress-${projectId}`);
+            if (completedTasks === totalTasks && totalTasks > 0) {
+                progressText.textContent = 'Completed ✅';
+            } else if (inProgress.length > 0) {
+                progressText.textContent = 'In Progress 🔄';
+            } else if (completedTasks > 0) {
+                progressText.textContent = 'Started 🟡';
+            } else {
+                progressText.textContent = 'Not Started ⚪';
+            }
+            
+            // Update progress bar
+            const progressBar = document.getElementById(`progressBar-${projectId}`);
+            progressBar.style.width = `${completionPercentage}%`;
+        }
+
+        // Database functions
+        async function saveToDatabase() {
+            if (!dbConnected || !supabase) {
+                showNotification('Please set up Supabase connection first!', 'warning');
+                return;
+            }
+            
+            showNotification('Saving to database...', 'info');
+            
+            try {
+                const data = getAllProjectData();
+                
+                // Save to Supabase
+                const { error } = await supabase
+                    .from('project_tasks')
+                    .upsert({
+                        id: 'user_projects', // You can make this user-specific later
+                        data: data,
+                        updated_at: new Date().toISOString()
+                    });
+                
+                if (error) throw error;
+                
+                showNotification('✅ Data saved to database successfully!');
+            } catch (error) {
+                console.error('Save error:', error);
+                showNotification('❌ Error saving to database: ' + error.message, 'error');
+            }
+        }
+
+        async function loadFromDatabase() {
+            if (!dbConnected || !supabase) {
+                showNotification('Please set up Supabase connection first!', 'warning');
+                return;
+            }
+            
+            showNotification('Loading from database...', 'info');
+            
+            try {
+                const { data, error } = await supabase
+                    .from('project_tasks')
+                    .select('data')
+                    .eq('id', 'user_projects')
+                    .single();
+                
+                if (error && error.code !== 'PGRST116') throw error;
+                
+                if (data && data.data) {
+                    loadProjectData(data.data.projects);
+                    showNotification('✅ Data loaded from database successfully!');
+                } else {
+                    showNotification('No saved data found in database', 'warning');
+                }
+            } catch (error) {
+                console.error('Load error:', error);
+                showNotification('❌ Error loading from database: ' + error.message, 'error');
+            }
+        }
+
+        function getAllProjectData() {
+            const projects = [];
+            document.querySelectorAll('.project-card').forEach(card => {
+                const projectData = {
+                    id: card.id,
+                    title: card.querySelector('.project-title').value,
+                    tasks: []
+                };
+                
+                card.querySelectorAll('.task-item').forEach(task => {
+                    const images = [];
+                    task.querySelectorAll('.image-item img').forEach(img => {
+                        images.push(img.src);
+                    });
+                    
+                    const taskData = {
+                        id: task.id,
+                        number: task.querySelector('.task-number').textContent,
+                        text: task.querySelector('.task-input').value,
+                        level: parseInt(task.dataset.level),
+                        complexity: task.querySelector('.complexity-selector').value,
+                        status: task.querySelector('.status-selector').value,
+                        notes: task.querySelector('.notes-area').value,
+                        images: images
+                    };
+                    
+                    projectData.tasks.push(taskData);
+                });
+                
+                projects.push(projectData);
+            });
+            
+            return {
+                projects: projects,
+                timestamp: new Date().toISOString(),
+                version: '1.0'
+            };
+        }
+
+        function loadProjectData(projects) {
+            // Clear existing projects
+            document.getElementById('projectsGrid').innerHTML = '';
+            projectCounter = 0;
+            taskCounter = 0;
+            
+            projects.forEach(projectData => {
+                const projectId = parseInt(projectData.id.split('-')[1]);
+                if (projectId > projectCounter) projectCounter = projectId;
+                
+                const projectsGrid = document.getElementById('projectsGrid');
+                const projectCard = document.createElement('div');
+                projectCard.className = 'project-card';
+                projectCard.id = projectData.id;
+                
+                projectCard.innerHTML = `
+                    <div class="project-header">
+                        <input type="text" class="project-title" placeholder="Enter project name..." value="${projectData.title}" onchange="autoSave()">
+                        <div class="project-stats">
+                            <span id="stats-${projectId}">0 tasks • 0% complete</span>
+                            <span id="progress-${projectId}">Not Started</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressBar-${projectId}" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="project-body">
+                        <div class="task-list" id="taskList-${projectId}">
+                            <!-- Tasks will be restored here -->
+                        </div>
+                        <button class="add-main-task-btn" onclick="addMainTask(${projectId})">➕ Add Main Task</button>
+                    </div>
+                `;
+                
+                projectsGrid.appendChild(projectCard);
+                
+                // Restore tasks
+                projectData.tasks.forEach(taskData => {
+                    const taskId = parseInt(taskData.id.split('-')[1]);
+                    if (taskId > taskCounter) taskCounter = taskId;
+                    
+                    const taskList = document.getElementById(`taskList-${projectId}`);
+                    const taskItem = document.createElement('div');
+                    taskItem.className = `task-item level-${taskData.level} ${taskData.complexity}`;
+                    taskItem.id = taskData.id;
+                    taskItem.dataset.level = taskData.level;
+                    
+                    const imagesHtml = taskData.images ? taskData.images.map(src => `
+                        <div class="image-item">
+                            <img src="${src}" alt="Task screenshot">
+                            <button class="image-delete" onclick="this.parentElement.remove(); autoSave()">×</button>
+                        </div>
+                    `).join('') : '';
+                    
+                    taskItem.innerHTML = `
+                        <div class="task-header">
+                            <div class="task-number">${taskData.number}</div>
+                            <input type="text" class="task-input" placeholder="Enter task description..." value="${taskData.text}" onchange="autoSave()">
+                            <div class="task-controls">
+                                <select class="status-selector ${taskData.status}" onchange="changeTaskStatus(this)">
+                                    <option value="not-started" ${taskData.status === 'not-started' ? 'selected' : ''}>Not Started</option>
+                                    <option value="pending" ${taskData.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                    <option value="in-progress" ${taskData.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
+                                    <option value="done" ${taskData.status === 'done' ? 'selected' : ''}>Done</option>
+                                    <option value="blocked" ${taskData.status === 'blocked' ? 'selected' : ''}>Blocked</option>
+                                </select>
+                                <select class="complexity-selector ${taskData.complexity}" onchange="changeTaskComplexity(this)">
+                                    <option value="easy" ${taskData.complexity === 'easy' ? 'selected' : ''}>📗 Easy</option>
+                                    <option value="complex" ${taskData.complexity === 'complex' ? 'selected' : ''}>📕 Complex</option>
+                                </select>
+                            </div>
+                            <div class="task-actions">
+                                <button class="action-btn expand-btn" onclick="toggleTaskDetails(${taskId})" title="Details">📝</button>
+                                ${taskData.level < 3 ? `<button class="action-btn add-subtask-btn" onclick="addSubTask(${projectId}, ${taskId})" title="Add Subtask">➕</button>` : ''}
+                                <button class="action-btn image-btn" onclick="toggleImageUpload(${taskId})" title="Add Image">📷</button>
+                                <button class="action-btn delete-btn" onclick="deleteTask(${taskId})" title="Delete">🗑️</button>
+                            </div>
+                        </div>
+                        
+                        <div class="task-details" id="details-${taskId}">
+                            <div class="task-section">
+                                <div class="section-title">📝 Notes & Progress</div>
+                                <textarea class="notes-area" placeholder="Add your notes, progress updates, or any additional details here..." onchange="autoSave()">${taskData.notes}</textarea>
+                            </div>
+                            
+                            <div class="image-section">
+                                <div class="section-title">📷 Screenshots & Images</div>
+                                <input type="file" class="image-upload" id="imageUpload-${taskId}" accept="image/*" multiple onchange="handleImageUpload(${taskId}, this)">
+                                <button class="image-upload-btn" onclick="document.getElementById('imageUpload-${taskId}').click()">📷 Add Screenshot/Image</button>
+                                <div class="image-preview" id="imagePreview-${taskId}">
+                                    ${imagesHtml}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    taskList.appendChild(taskItem);
+                });
+                
+                updateProjectStats(projectId);
+            });
+        }
+
+        function exportData() {
+            const date = new Date().toISOString().split('T')[0];
+            let exportText = `PROJECT TASK BREAKDOWN REPORT - ${date}\n`;
+            exportText += '=' + '='.repeat(50) + '\n\n';
+            
+            const projects = document.querySelectorAll('.project-card');
+            projects.forEach((project, index) => {
+                const title = project.querySelector('.project-title').value || `Project ${index + 1}`;
+                const stats = project.querySelector('.project-stats span').textContent;
+                
+                exportText += `📋 ${title.toUpperCase()}\n`;
+                exportText += `   ${stats}\n`;
+                exportText += '-'.repeat(title.length + 5) + '\n\n';
+                
+                const tasks = project.querySelectorAll('.task-item');
+                tasks.forEach(task => {
+                    const number = task.querySelector('.task-number').textContent;
+                    const text = task.querySelector('.task-input').value;
+                    const status = task.querySelector('.status-selector').value;
+                    const complexity = task.querySelector('.complexity-selector').value;
+                    const notes = task.querySelector('.notes-area').value;
+                    const level = parseInt(task.dataset.level);
+                    
+                    if (text.trim()) {
+                        const indent = '  '.repeat(level - 1);
+                        const statusIcon = {
+                            'not-started': '⚪',
+                            'pending': '🟡',
+                            'in-progress': '🔄',
+                            'done': '✅',
+                            'blocked': '🔴'
+                        }[status];
+                        const complexityIcon = complexity === 'complex' ? '📕' : '📗';
+                        
+                        exportText += `${indent}${number}. ${statusIcon} ${complexityIcon} ${text}\n`;
+                        
+                        if (notes.trim()) {
+                            exportText += `${indent}    💬 ${notes}\n`;
+                        }
+                        
+                        const images = task.querySelectorAll('.image-item');
+                        if (images.length > 0) {
+                            exportText += `${indent}    📷 ${images.length} screenshot(s) attached\n`;
+                        }
+                        
+                        exportText += '\n';
+                    }
+                });
+                exportText += '\n';
+            });
+            
+            // Create and download text file
+            const blob = new Blob([exportText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `project-breakdown-${date}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showNotification('Report exported successfully!');
+        }
+
+        // Auto-save functionality
+        let autoSaveTimeout;
+        function autoSave() {
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(() => {
+                // Store in memory for now
+                const data = getAllProjectData();
+                window.projectData = data;
+                
+                // If database is connected, auto-save there too
+                if (dbConnected && supabase) {
+                    saveToDatabase();
+                }
+            }, 1000);
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification show ${type}`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize the application
+        init();
+    </script>
+</body>
+</html>
