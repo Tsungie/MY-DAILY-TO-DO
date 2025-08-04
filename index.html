@@ -681,17 +681,15 @@
         let dbConnected = false;
         
         // Try to initialize Supabase if credentials are provided
-      // Try to initialize Supabase if credentials are provided
-if (SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL.startsWith('https://')) {
-    try {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        dbConnected = true;
-        console.log('Supabase initialized successfully');
-    } catch (error) {
-        console.log('Supabase initialization failed:', error);
-        dbConnected = false;
-    }
-}
+        if (SUPABASE_URL !== 'https://tppfkdkgavkmexffrfgz.supabase.co' && SUPABASE_ANON_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwcGZrZGtnYXZrbWV4ZmZyZmd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzMDA5MjksImV4cCI6MjA2OTg3NjkyOX0.aCHLoshuryFUTES2L_hSTPAsqpY5Kbc7-6Qm8qCNBEA') {
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                dbConnected = true;
+            } catch (error) {
+                console.log('Supabase initialization failed:', error);
+            }
+        }
+
         let projectCounter = 0;
         let taskCounter = 0;
         let allProjects = [];
@@ -725,6 +723,9 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL.startsWith('https://')) {
             const status = document.getElementById('dbStatus');
             
             if (dbConnected && supabase) {
+                // Test the connection
+                testConnection();
+                
                 status.className = 'db-status connected';
                 status.textContent = '💾 Database: Connected';
                 
@@ -736,6 +737,28 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL.startsWith('https://')) {
             } else {
                 status.className = 'db-status disconnected';
                 status.textContent = '💾 Setup Required';
+            }
+        }
+
+        async function testConnection() {
+            try {
+                // Test if we can connect to Supabase
+                const { data, error } = await supabase
+                    .from('project_tasks')
+                    .select('count', { count: 'exact', head: true });
+                
+                if (error && error.code === '42P01') {
+                    // Table doesn't exist
+                    showNotification('⚠️ Please create the project_tasks table in Supabase', 'warning');
+                } else if (error) {
+                    console.error('Connection test failed:', error);
+                    showNotification('❌ Database connection failed: ' + error.message, 'error');
+                } else {
+                    console.log('Database connection successful');
+                }
+            } catch (error) {
+                console.error('Connection test error:', error);
+                showNotification('❌ Database connection error', 'error');
             }
         }
 
@@ -1130,18 +1153,25 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL.startsWith('https://')) {
             
             try {
                 const data = getAllProjectData();
+                console.log('Saving data:', data); // Debug log
                 
                 // Save to Supabase
-                const { error } = await supabase
+                const { data: result, error } = await supabase
                     .from('project_tasks')
                     .upsert({
                         id: 'user_projects', // You can make this user-specific later
                         data: data,
                         updated_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'id'
                     });
                 
-                if (error) throw error;
+                if (error) {
+                    console.error('Save error details:', error);
+                    throw error;
+                }
                 
+                console.log('Save successful:', result); // Debug log
                 showNotification('✅ Data saved to database successfully!');
             } catch (error) {
                 console.error('Save error:', error);
@@ -1164,9 +1194,15 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL.startsWith('https://')) {
                     .eq('id', 'user_projects')
                     .single();
                 
-                if (error && error.code !== 'PGRST116') throw error;
+                console.log('Load result:', { data, error }); // Debug log
                 
-                if (data && data.data) {
+                if (error && error.code !== 'PGRST116') {
+                    console.error('Load error details:', error);
+                    throw error;
+                }
+                
+                if (data && data.data && data.data.projects) {
+                    console.log('Loading projects:', data.data.projects); // Debug log
                     loadProjectData(data.data.projects);
                     showNotification('✅ Data loaded from database successfully!');
                 } else {
@@ -1396,19 +1432,47 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL.startsWith('https://')) {
                 
                 // If database is connected, auto-save there too
                 if (dbConnected && supabase) {
+                    console.log('Auto-saving to database...');
                     saveToDatabase();
                 }
-            }, 1000);
+            }, 2000); // Increased to 2 seconds to avoid too frequent saves
         }
 
-        function showNotification(message, type = 'success') {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.className = `notification show ${type}`;
+        // Manual save function that shows progress
+        async function saveToDatabase() {
+            if (!dbConnected || !supabase) {
+                showNotification('Please set up Supabase connection first!', 'warning');
+                return;
+            }
             
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
+            showNotification('Saving to database...', 'info');
+            
+            try {
+                const data = getAllProjectData();
+                console.log('Saving data:', data); // Debug log
+                
+                // Save to Supabase
+                const { data: result, error } = await supabase
+                    .from('project_tasks')
+                    .upsert({
+                        id: 'user_projects', // You can make this user-specific later
+                        data: data,
+                        updated_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'id'
+                    });
+                
+                if (error) {
+                    console.error('Save error details:', error);
+                    throw error;
+                }
+                
+                console.log('Save successful:', result); // Debug log
+                showNotification('✅ Data saved to database successfully!');
+            } catch (error) {
+                console.error('Save error:', error);
+                showNotification('❌ Error saving to database: ' + error.message, 'error');
+            }
         }
 
         // Initialize the application
